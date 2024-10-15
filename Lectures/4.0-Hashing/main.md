@@ -88,5 +88,83 @@ So we have two options for dealing with overlaps:
 - Chaining:
     - ![](./assets/imgs/002.png) 
 
+We want to make sure those chains are short to reduce search time 
 
-31:100 end time
+### How do we pick a good hash function?
+
+- If u is large then there is a possibility all items go to the same hash value
+
+#### Division Hash Function 
+
+`h(k) = k%m`
+
+Take a key from a large space and mod it so it wraps around
+- If the keys are uniformly distributed then it's not such a bad thing 
+- This is essentially what python does 
+
+#### Universal Hash Function 
+- Non-deterministic, takes form a set of possible hash functions 
+
+Function 1: h<sub>ab</sub>(k) = ((ak+b)%p)%m)
+
+What is this saying:
+- This takes some key (k) and multiplies it by some random number, adds some random number mods by some prime (p) and moding by the size of the function (m)  
+
+Function 2: H(p,m) = {h<sub>ab</sub>(k) | a,b <= {0, ..., > 1} } and a < a $\neq$ 0
+
+What is this saying:
+- I have a hash family, that's paramaterized by the length of the hash function (m) and some prime (p) where p > u
+    - p, m are fixed when we initailze the hash table 
+- when we instantiate the hash table we will pick an (a,b) from {h<sub>ab</sub>(k) | a,b <= {0, ..., > 1} } to choose some function defined in function<sub>1</sub>
+    - i.e. Function 2 defines the range of possible functions
+
+The point of this is so that when the user provides some input because (a,b) is random it is difficult for them to give a bad example (where all inputs map to the same hash value)
+
+##### Universality
+
+The probability of choosing a hash function within this hash family  collides with another key is $\le$ 1/m for any two distict keys in the universe of all keys
+
+Pr {h(k<sub>i</sub>) = h(k<sub>j</sub>)} $\le$ 1/m $\forall$ k<sub>i</sub> $\neq$ k<sub>j</sub> {0, ..., n-1}
+
+- Where the universe of all possible keys is defined to be {0,..., n-1}
+
+In english:
+- For any two keys, if we randomly choose a hash function, the odds we collide those keys are 1/m 
+- This is a measure of how well distrubted the keys are
+
+We can use this result (Function 2) the length of the chains are expected to be constant length 
+
+**How can we prove that?**
+
+We can define an *indicator random variable* (a var with some probability is 1 and 1-that probability is zero)
+
+x<sub>ij</sub> over choice h $\epsilon$ H 
+
+x<sub>ij</sub>=1 if h(k<sub>i</sub>) = h(k<sub>j</sub>), 0 otherwise
+
+In english:
+We are choosing randomly over the hash family is k<sub>i</sub> and k<sub>j</sub> collide x<sub>ij</sub> = 1 ; else it is 0
+
+Size of chain at h(k<sub>i</sub>) = Xi = $\sum_{j=0}^{n-1}$ X<sub>ij</sub> Recall: 1 is collision; else 0
+
+Expected Value <sub> h $\epsilon$ H</sub> {X<sub>i</sub>} = E {$\sum_{j}$X<sub>ij</sub>}
+
+Note: **Linearity of Expectation**
+- If i,j are independent of each other; the expectation of the sum of the independent random vars (j) is the same as the summation of their expectations
+
+Expected Value <sub> h $\epsilon$ H</sub> {X<sub>i</sub>} = E {$\sum_{j}$X<sub>ij</sub>} = $\sum_{j}$ E {X<sub>ij</sub>}
+
+One of these j is the same as i (note j loops through all values for [0,n-1] one of these is i); so when i=j E=1
+
+Expected Value <sub> h $\epsilon$ H</sub> {X<sub>i</sub>} = E {$\sum_{j}$X<sub>ij</sub>} = $\sum_{j \ne i}$ $ E {X<sub>ij</sub>} + 1
+
+- Because if j=i they are the same key (they collide) but otherwise we can use the universal property:
+    - Pr {h(k<sub>i</sub>) = h(k<sub>j</sub>)} $\le$ 1/m $\forall$ k<sub>i</sub> $\neq$ k<sub>j</sub> {0, ..., n-1}
+- The probability this occurs is 1/m
+- Since this is an indicator random var; the expectation = outcome * their probability
+
+Expected Value <sub> h $\epsilon$ H</sub> {X<sub>i</sub>} = E {$\sum_{j}$X<sub>ij</sub>} = $\sum_{j \ne i}$ $ E {X<sub>ij</sub>} + 1 = ($\sum_{j \ne i}$ 1/m) + 1 = 1 + n-1/m 
+
+How many thing are there? [n-1] things
+
+If were growing n for a fixed m then it won't be linear, then we may rebuild a new hash table with a new m
