@@ -9,6 +9,9 @@
             * [Permutation Sort](#permutation-sort)
             * [Selection Sort](#selection-sort)
                 * [Example](#example)
+                    * [Inducation (Recursive Leap of Faith)](#inducation-recursive-leap-of-faith)
+            * [Merge Sort](#merge-sort)
+                * [Merge Sort Example](#merge-sort-example)
 
 <!-- vim-markdown-toc -->
 # Sets and Sorting
@@ -201,4 +204,132 @@ Largest element 0, ..., i
 1. Either it's at index i 
 2. Or has index < i
 
-32:24
+###### Inducation (Recursive Leap of Faith)
+
+Base Case: i = 0; only one element so it must be the max
+
+Induction: 
+
+* For an arr of len 1:
+    1. S(1) = $\theta$(1)
+    2. S(n) = S(n-1) + $\theta$(1)
+
+Let's prove 2.
+
+S(n) = cn ; where c is some constant $\theta$(1)
+
+cn ?= c(n-1) + $theta$(1)
+cn ?= cn-c + $theta$(1)
+0 ?= -c + $theta$(1)
+c ?= $theta$(1) <- This checks out to be what we expected c to be and thus is true
+
+T(n) = T(n-1) + $\theta$ (n) ?= $\theta$ (n<sup>2</sup>)
+T(n) ?= cn<sup>2</sup>
+
+cn<sup>2</sup> ?= c(n-1)<sup>2</sup> + $\theta$(n) = cn<sup>2</sup> - 2cn + c + $\theta$(n)
+
+$\theta$(n) = 2cn-c
+
+#### Merge Sort 
+
+##### Merge Sort Example 
+
+Starting set
+```
+[7] [1] [5] [6] [2] [4] [9] [3]
+```
+Merge sets
+```
+[7 1] [5 6] [2 4] [9 3]
+```
+Sort merged sets
+```
+[1 7] [5 6] [2 4] [3 9]
+```
+Repeat merge
+```
+[1 7|5 6] [2 4|3 9]
+```
+Sort *Note each half is already sorted within each half*
+```
+[1 7|5 6] [2 4|3 9]
+```
+Repeat merge
+```
+[1 5 6 7] [2 3 4 9]
+```
+Sort one final time *Note each half is already sorted within each half*
+
+```
+[1 5 6 7|2 3 4 9]
+```
+This gives us the advantage of 
+
+Construct merged array *backwards*
+
+Compare the two largest sorted values and place the greater term in the last position; then move the pointer form the term taken to the left (below)
+```
+      *
+1 5 6 7
+                    [ ] [ ] [ ] [ ] [ ] [ ] [ ] [9]
+2 3 4 9
+      *
+```
+Now we can compare the next set of pointers, being in partally sorted order allows us to minimize the runtime cost by acknowledging the largest term will always be associated to one of the two pointers
+```
+      *
+1 5 6 7
+                    [ ] [ ] [ ] [ ] [ ] [ ] [7] [9]
+2 3 4 9
+    *  
+```
+repeat...
+```
+    *  
+1 5 6 7
+                    [ ] [ ] [ ] [ ] [ ] [6] [7] [9]
+2 3 4 9
+    *  
+```
+and so forth ...
+
+```python 
+def merge_sort(A, a=0, b=None):
+    '''Sort A[a:b]'''
+    if b is None: b = len(A)
+        if 1 < b - a:
+        c = (a + b + 1) // 2 # Find the midpoint
+        merge_sort(A, a, c) # Sort the left half
+        merge_sort(A, c, b) # Sort the right half
+        L, R = A[a:c], A[c:b] # Define left and right halfs
+        merge(L, R, A, len(L), len(R), a, b) #Merge 
+```
+
+```
+             i
+[1] [3] [5] [7]
+                    [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ]
+                     a                           b
+[2] [4] [6] [72]
+              j
+```
+
+```
+             i
+[1] [3] [5] [7]
+                    [ ] [ ] [ ] [ ] [ ] [ ] [ ] [72]
+                     a                       b
+[2] [4] [6] [72]
+         j
+```
+
+Linear time to merge $\theta$(n)
+This will have a runtime of $\theta$(nlog(n))
+
+Recall:
+* T(1) = $\theta$(1)
+* T(n) = 2T(n/2) * $\theta$(n) + $\theta$(n) => T(n)<sup>2</sup> = $\theta$(nlogn)
+
+Prove via subsitution:
+cnlog(n) = 2c(n/2)log(n/2) + $\theta$(n) = cn(log(n) - log(2)) + $\theta$(n)
+$\theta$(n) = cnlog(2)
